@@ -136,5 +136,6 @@ def retorno(pelicula:str):
 
 @app.get('/recomendacion/{titulo}')
 def recomendacion(titulo: str):
+    respuesta=titulo
     '''Ingresas un nombre de pelicula y te recomienda las similares en una lista'''
     return {'lista recomendada': respuesta}
