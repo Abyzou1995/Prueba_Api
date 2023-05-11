@@ -24,7 +24,7 @@ def read_root():
 def peliculas_mes(mes:str):
     '''Se ingresa el mes y la funcion retorna la cantidad de peliculas que se estrenaron ese mes historicamente'''
     if isinstance(mes, str):
-        mes = mes.lower()
+        mes = mes.lower().strip()
         mes = unicodedata.normalize('NFKD', mes).encode(
             'ascii', 'ignore').decode('utf-8', 'ignore')
         m = {
@@ -41,9 +41,15 @@ def peliculas_mes(mes:str):
             'noviembre': 11,
             'diciembre': 12
         }
-        jum = Api1.cantidad[Api1["mes"] == m[mes]]
-        jum = jum.tolist()
-        respuesta = jum[0]
+        if mes in m:
+            m1=m[mes]
+        else:
+            m1=""
+        jum = Api1[Api1["mes"] == m1]
+        if jum.empty:
+            respuesta="No data available"
+        else:
+            respuesta = jum.cantidad.astype(float).iloc[0]
         return {'mes': mes, 'cantidad': respuesta}
 
 
@@ -51,7 +57,7 @@ def peliculas_mes(mes:str):
 def peliculas_dia(dia:str):
     '''Se ingresa el dia y la funcion retorna la cantidad de peliculas que se estrebaron ese dia historicamente'''
     if isinstance(dia, str):
-        dia = dia.lower()
+        dia = dia.lower().strip()
         dia = unicodedata.normalize('NFKD', dia).encode(
             'ascii', 'ignore').decode('utf-8', 'ignore')
         d = {
@@ -63,9 +69,16 @@ def peliculas_dia(dia:str):
             'sabado': 5,
             'domingo': 6
         }
-        jum = Api2.cantidad[Api2["dia"] == d[dia]]
-        jum = jum.tolist()
-        respuesta = jum[0]
+        if dia in d:
+            d1=d[dia]
+        else:
+            d1=""
+        jum = Api2[Api2["dia"] == d1]
+        
+        if jum.empty==True:
+            respuesta= "No data available"
+        else:
+            respuesta = jum.cantidad.astype(float).iloc[0]
 
     return {'dia': dia, 'cantidad': respuesta}
 
@@ -76,14 +89,20 @@ def franquicia(franquiciax):
 
 
     if isinstance(franquiciax,str):
-        franquiciax = franquiciax.lower()
+        franquiciax = franquiciax.lower().strip()
         franquiciax = unicodedata.normalize('NFKD', franquiciax).encode(
             'ascii', 'ignore').decode('utf-8', 'ignore')
 
         ganancias = Api3["revenue"][Api3["belongs_to_collection"].str.contains(franquiciax)==True]
-        respuesta1=ganancias.shape[0]
-        respuesta2=ganancias.sum()
-        respuesta3=ganancias.mean()
+        if ganancias.empty==True:
+            respuesta1= "No data available"
+            respuesta2= "No data available"
+            respuesta3= "No data available"
+        else:
+            
+            respuesta1=ganancias.shape[0]
+            respuesta2=ganancias.sum()
+            respuesta3=ganancias.mean()
 
     return {'franquicia': franquiciax, 'cantidad': respuesta1, 'ganancia_total': respuesta2, 'ganancia_promedio': respuesta3}
 
@@ -92,12 +111,15 @@ def franquicia(franquiciax):
 def peliculas_pais(pais):
     '''Ingresas el pais, retornando la cantidad de peliculas producidas en el mismo'''
     if isinstance(pais, str):
-        pais = pais.lower()
+        pais = pais.lower().strip()
         pais = unicodedata.normalize('NFKD', pais).encode(
             'ascii', 'ignore').decode('utf-8', 'ignore')
         ganancias = Api4["title"][Api4["production_countries"].str.contains(
-            pais) == True]
-        respuesta1 = ganancias.shape[0]
+            pais+"'") == True]
+        if ganancias.empty==True:
+            respuesta1= "No data available"
+        else:
+            respuesta1 = ganancias.shape[0]
 
     return {'pais': pais, 'cantidad': respuesta1}
 
@@ -106,31 +128,42 @@ def peliculas_pais(pais):
 def productoras(productora:str):
     '''Ingresas la productora, retornando la ganancia toal y la cantidad de peliculas que produjeron'''
     if isinstance(productora, str):
-        productora = productora.lower()
+        productora = productora.lower().strip()
         productora = unicodedata.normalize('NFKD', productora).encode(
             'ascii', 'ignore').decode('utf-8', 'ignore')
         ganancias = Api5["revenue"][Api5["production_companies"].str.contains(
-            productora) == True]
-        respuesta2 = ganancias.shape[0]
-        respuesta1=ganancias.sum()
+            productora+"'") == True]
+        if ganancias.empty==True:
+            respuesta1= "No data available"
+            respuesta2= "No data available"
+        else:
+            respuesta2 = ganancias.shape[0]
+            respuesta1=  ganancias.sum()
     return {'productora': productora, 'ganancia_total': respuesta1, 'cantidad': respuesta2}
 
 
+
+
 @app.get('/retorno/{pelicula}')
-def retorno(pelicula:str):
+def retornox(pelicula):
     '''Ingresas la pelicula, retornando la inversion, la ganancia, el retorno y el año en el que se lanzo'''
     if isinstance(pelicula, str):
-        pelicula = pelicula.lower()
-        pelicula = unicodedata.normalize('NFKD', pelicula).encode(
-            'ascii', 'ignore').decode('utf-8', 'ignore')
+        pelicula = pelicula.lower().strip()
+        pelicula = unicodedata.normalize('NFKD', pelicula).encode('ascii', 'ignore').decode('utf-8', 'ignore')
         ganancias = Api6[Api6["title"]==pelicula]
-        respuesta1 = ganancias.budget.sum()
-        respuesta2 = ganancias.revenue.sum()
-        respuesta3 = ganancias["return"].sum()
-        respuesta4 = ganancias["release_year"].astype(float)[0]
-
-    return {'pelicula': pelicula, 'inversion': respuesta1, 'ganacia': respuesta2, 'retorno': respuesta3, 'anio': int(respuesta4)}
-
+        if ganancias.empty==True:
+            nombre=pelicula
+            respuesta1= "No data available"
+            respuesta2= "No data available"
+            respuesta3= "No data available"
+            respuesta4= "No data available"
+        else:
+            nombre=ganancias.title.values.tolist()
+            respuesta1 = ganancias.budget.values.tolist()
+            respuesta2 = ganancias.revenue.values.tolist()
+            respuesta3 = ganancias["return"].values.tolist()
+            respuesta4 = ganancias["release_year"].values.tolist()
+    return {'pelicula': nombre, 'inversion': respuesta1, 'ganacia': respuesta2, 'retorno': respuesta3, 'anio': respuesta4}
 # ML
 
 
