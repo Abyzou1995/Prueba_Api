@@ -4,15 +4,30 @@ import pandas as pd
 import numpy as np
 import json
 import unicodedata
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import linear_kernel
 
 app = FastAPI()
 
-Api1=pd.read_csv("API1.csv")
-Api2=pd.read_csv("API2.csv")
-Api3=pd.read_csv("API3.csv")
-Api4=pd.read_csv("API4.csv")
-Api5=pd.read_csv("API5.csv")
-Api6=pd.read_csv("API6.csv")
+Api1=pd.read_csv("Dataset_API/API1.csv")
+Api2 = pd.read_csv("Dataset_API/API2.csv")
+Api3 = pd.read_csv("Dataset_API/API3.csv")
+Api4 = pd.read_csv("Dataset_API/API4.csv")
+Api5 = pd.read_csv("Dataset_API/API5.csv")
+Api6 = pd.read_csv("Dataset_API/API6.csv")
+Api7=pd.read_csv("Dataset_API/API7.csv")
+
+
+##ML model
+ml = Api7.head(10000)
+tfidf = TfidfVectorizer(stop_words="english", max_features=10000)
+tfidf_matrix = tfidf.fit_transform(ml["features"])
+cosine_sim = linear_kernel(tfidf_matrix, tfidf_matrix)
+ml.reset_index(inplace=True, drop=True)
+ml.reset_index(inplace=True)
+indices = ml[["title", "index"]]
+
+
 
 
 @app.get("/")
@@ -169,6 +184,21 @@ def retornox(pelicula):
 
 @app.get('/recomendacion/{titulo}')
 def recomendacion(titulo: str):
-    respuesta=titulo
     '''Ingresas un nombre de pelicula y te recomienda las similares en una lista'''
-    return {'lista recomendada': respuesta}
+    titulo=titulo.lower().strip()
+    titulo = unicodedata.normalize('NFKD', titulo).encode(
+        'ascii', 'ignore').decode('utf-8', 'ignore')
+    idx = indices[indices["title"] == titulo]
+    if idx.empty == True:
+        respuesta = ["No data available"]
+    else:
+        idy = idx["index"].iloc[0]
+        sim_scores = list(enumerate(cosine_sim[idy]))
+        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+        sim_scores = sim_scores[1:6]
+        movie_indices = [i[0] for i in sim_scores]
+        respuesta = list(ml['title'].iloc[movie_indices].str.title())
+        
+    return {'titulo': titulo, 'lista recomendada': respuesta}
+    
+    

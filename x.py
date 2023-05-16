@@ -1,5 +1,7 @@
+
 import pandas as pd
-my_dict={
-  'id':[1,2,3,4,5,6,7],
-  'name':['$John','Ma51','Arnold1','Krish0','Roni','Krish','Max']}
-df=pd.DataFrame(my_dict)
+
+import matplotlib.pyplot as plt
+import missingno as msno
+df=pd.read_csv("Dataset_API/dataset_function_API.csv")## Load dataset from ETL analysis
+msno.bar(df.sample(1000),labels=True)
