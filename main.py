@@ -19,8 +19,8 @@ Api7=pd.read_csv("Dataset_API/API7.csv")
 
 
 ##ML model
-ml = Api7.head(10000)
-tfidf = TfidfVectorizer(stop_words="english", max_features=10000)
+ml = Api7.head(5000)
+tfidf = TfidfVectorizer(stop_words="english", max_features=5000)
 tfidf_matrix = tfidf.fit_transform(ml["features"])
 cosine_sim = linear_kernel(tfidf_matrix, tfidf_matrix)
 ml.reset_index(inplace=True, drop=True)
